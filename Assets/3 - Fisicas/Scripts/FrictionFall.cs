@@ -37,7 +37,7 @@ public class FrictionFall : MonoBehaviour
         if (frictionMode == Mode.FluidFriction)
         {
             if (transform.position.y > 0.0) { ApplyFriction(); }
-            if (transform.position.y <= 0.0f) { ApplyFluidFriction(); Debug.Log("aaaaaaaa"); }
+            if (transform.position.y <= 0.0f) { ApplyFluidFriction(); }
         }
         else if (frictionMode == Mode.Friction){ ApplyFriction(); }
         Move();
