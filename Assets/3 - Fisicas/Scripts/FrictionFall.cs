@@ -22,19 +22,22 @@ public class FrictionFall : MonoBehaviour
 
     
     [Header("Constants")]
-    [Range(0f, 1f)] [SerializeField] private float dampingFactor = 0.9f;
     [Range(0f, 1f)] [SerializeField] private float frictionCoeficent = 0.9f;
+    [Range(0f, 1f)] [SerializeField] private float dampingFactor = 0.9f;
+
 
     private void Start() { position = new CustomVector(transform.position.x, transform.position.y); camera = Camera.main; }
 
     private void FixedUpdate()
     {
-        acceleration*=0f;
+        acceleration *= 0f;
         netForce = new CustomVector(0, 0);
+        weight = mass * gravity;
+        ApplyForce(weight);
         if (frictionMode == Mode.FluidFriction)
         {
-            if (transform.position.y > 0.9) { ApplyFriction();}
-            if (transform.position.y <= 0.9) { ApplyFluidFriction();}
+            if (transform.position.y > 0.0) { ApplyFriction(); }
+            if (transform.position.y <= 0.0f) { ApplyFluidFriction(); Debug.Log("aaaaaaaa"); }
         }
         else if (frictionMode == Mode.Friction){ ApplyFriction(); }
         Move();
@@ -42,9 +45,9 @@ public class FrictionFall : MonoBehaviour
 
     private void Move()
     {
-        velocity += acceleration * Time.fixedDeltaTime;
-        position += velocity * Time.fixedDeltaTime;
-        if(velocity.magnitude >= 10) { velocity = 10f * velocity.normalized; }
+        velocity = velocity + acceleration * Time.fixedDeltaTime;
+        position = position + velocity * Time.fixedDeltaTime;
+        CheckWorldBoxBounds();
         transform.position = new Vector3(position.x, position.y);
     }
     private void ApplyForce(CustomVector force)
@@ -59,15 +62,22 @@ public class FrictionFall : MonoBehaviour
     }
     private void ApplyFluidFriction()
     {
-        if (transform.localPosition.y <= 0)
+        float p = 1;
+        float area = transform.localScale.x;
+        float fluidDragCoeficent = 1f;
+        float velocityMagnitude = velocity.magnitude;
+        float scalarPart = -0.5f * p * velocityMagnitude * velocityMagnitude * area * fluidDragCoeficent;
+        CustomVector friction = scalarPart * velocity.normalized;
+        ApplyForce(friction);
+    }
+    private void CheckWorldBoxBounds()
+    {
+        if (Mathf.Abs(position.y) > camera.orthographicSize)
         {
-            float p = 1;
-            float flontalArea = transform.localScale.x;
-            float fluidDragCoefficent = 1;
-            float velocityMagnitude = velocity.magnitude;
-            float scalarPart = -0.5f * p * velocityMagnitude * velocityMagnitude * flontalArea * fluidDragCoefficent;
-            CustomVector friction = scalarPart * velocity.normalized;
-            ApplyForce(friction);
+            velocity.y = velocity.y * -1;
+            position.y = Mathf.Sign(position.y) * camera.orthographicSize;
+            velocity *= dampingFactor;
         }
     }
 }
+
